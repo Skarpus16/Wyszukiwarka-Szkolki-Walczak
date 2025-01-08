@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+	<title>Mapa Internetowa Patryk Konwiński</title>
+	<style>
+	html, body, #map{
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	background-color: lightgray;
+	}
+      .legend {
+            position: absolute;
+            top:10px;
+            right: 10px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid black;
+        }
+		 #tytul {
+               position: absolute;
+    margin-left: 470px;
+    margin-top: 10px;
+    width: 50%;
+    max-width: 2000px;
+    height: 50px;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    z-index: 1000;
+    text-align: center;
+    line-height: 50px; 
+    font-size: 25px;
+    font-family: Bookman;
+        }
+		 #podtytul {
+            
+    margin-left: 450px;
+    margin-top:60px;
+    width: 50%;
+    max-width: 2000px;
+    height: 30px;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    z-index: 1000;
+    position: absolute;
+	top: 10px; /* Przesunięcie w dół o 10px */
+	left: 20px; /* Przesunięcie w prawo o 20px */
+    line-height: 30px; 
+	text-align: center;
+    font-size: 17px;
+    font-family: Bookman;
+        }
+	</style>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" ></script>
+<link rel="stylesheet" href="./Leaflet.GraphicScale/Leaflet.GraphicScale.min.css"/>
+	<script src="./Leaflet.GraphicScale/Leaflet.GraphicScale.min.js"></script>
+		<link rel="stylesheet" href="./Leaflet.MousePosition/L.Control.MousePosition.css"/>
+	<script src="./Leaflet.MousePosition/L.Control.MousePosition.js"></script>
+	<script src="./rosliny ozdobne.js"></script>
+	<script src="./rosliny owocowe.js"></script>
+	<script src="./rosliny ozdobne linie.js"></script>
+	<script src="./teren.js"></script>
+	<script src="./drogi.js"></script>
+	<script src="./budynki.js"></script>
+	<script src="./sciezki.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.8/dist/leaflet-search.min.css">
+<script src="https://unpkg.com/leaflet-search@3.0.8/dist/leaflet-search.min.js"></script>
+<link rel="stylesheet" href="./leaflet-search.src.css" />
+<script src="./leaflet-search.src.js"></script>
+<script src="./pluginy/Leaflet.pattern/dist/leaflet.pattern.js"></script>
+  </head>
+  
+  <body>
+  <div id="tytul">Wyszukiwarka Roślin</div>
+   <div id="podtytul">Kliknij lupę, by wyszukać roślinę lub wybierz miejsce, aby sprawdzić, jaka roślina tam rośnie!</div> 
+  <div id="map"></div>
+   <div class="legend">
+        <h3>Obiekty interaktywne na mapie</h3> 
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #689f38;"></div>
+            <span>Rośliny Ozdobne</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #880e4f;"></div>
+            <span>Rośliny Owocowe</span>
+        </div>
+		    <div class="legend-item">
+            <div class="legend-icon" style="border-top: 3px solid #ff8f00; width: 30px; height: 0px;"></div>
+            <span>Rośliny Ozdobne duże</span>
+        </div>
+       
+		<hr><h3>Pozostałe obiekty</h3>
+             <div class="legend-item">
+            <div class="legend-icon" style="background-color: transparent; border: 3px dashed red;"></div>
+            <span>Granica Szkółki</span>
+        </div>
+                <div class="legend-item">
+            <div class="legend-icon" style="background-color: #795548; border: 1px solid black;"></div>
+            <span>Drogi</span>
+        </div>
+                        <div class="legend-item">
+            <div class="legend-icon" style="background-color: #2f2f2f; border: 1px solid #696969;"></div>
+            <span>Budynki</span>
+        </div>
+                            <div class="legend-item">
+            <div class="legend-icon" style="background-color: #696969; border: 1px solid #2e2e2e;"></div>
+            <span>Ścieżki</span>
+        </div>
+    </div>
+  <script>
+  //Utworzenie mapy oraz ustawienie widoku
+ var map = L.map('map', {
+    maxZoom: 21,
+    minZoom: 19,
+   maxBounds: [[52.3855, 17.212], [52.388, 17.218]],
+    maxBoundsViscosity: 1.0
+}).setView([52.38649299427052, 17.214784958047], 19);
+  L.control.mousePosition().addTo(map);
+	
+var podklad = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+// Sygnatura wejścia
+var icon_wejscie = L.icon({ 
+	iconUrl: './wejscie.jpg', 
+	iconSize: [50, 50],
+	});
+// Ortofotomapa
+var orthophoto = L.imageOverlay('ortofotomapa_dobra2.jpg', [[52.3745284814257133, 17.1866665151024094], [52.3963058278690639, 17.2195710830715143]] ).addTo(map);
+// Skala na mapie
+var graphicScale = L.control.graphicScale({fill:'fill',doubleLine:'true'}).addTo(map);
+// marker wejścia
+L.marker([52.38634758438164,17.216493579402105],{ icon: icon_wejscie }).addTo(map) .bindPopup("Wejście"); 
+
+// tworzenie wzoru przerywanych linii
+var przerywanelinie = new L.StripePattern({
+    weight: 4,
+    spaceWeight: 10,
+    color: '#afb42b',
+    opacity: 0.65
+	
+});
+przerywanelinie.addTo(map);
+
+
+// tworzenie logo firmy z hiperłączem
+var LogoControl = L.Control.extend({
+    options: {
+        position: 'bottomright'
+    },
+
+    onAdd: function (map) {       
+	   var logotyp = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+       logotyp.style.backgroundImage = "url('logo.png')";
+        logotyp.style.backgroundSize = "contain"; 
+        logotyp.style.width = '200px'; 
+       logotyp.style.height = '50px';
+        logotyp.style.cursor = 'pointer';
+		 var link = L.DomUtil.create('a', '', logotyp);
+		link.href = 'https://www.szkolkawalczak.pl/';
+		link.target = '_blank';
+		link.style.display = 'block';
+        link.style.width = '100%';
+        link.style.height = '100%';
+		logotyp.style.backgroundColor = 'transparent';
+		link.style.backgroundColor = 'transparent';
+        return logotyp;
+    }
+});
+
+// Dodanie kontrolki logo do mapy
+map.addControl(new LogoControl());
+
+// Określenie styli warstw na mapie
+function styleozdobne(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:1.5,
+				opacity: 1,
+				color: 'black',
+				fillColor: '#689f38',
+				fillOpacity:1
+				}}
+		}
+	function styleowocowe(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:1.5,
+				opacity: 1,
+				color: 'black',
+				fillColor: '#880e4f',
+				fillOpacity:1	
+				}}
+		}			
+				function styleozdobnelinie(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:3,
+				opacity: 1,
+				color: '#ff8f00',
+				fillColor: '#7b1fa2',
+				fillOpacity:1
+				}}
+		}
+			function styledrogi(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:1.5,
+				opacity: 0.75,
+				color: 'black',
+				fillColor: '#795548',
+				fillOpacity: 0.75
+				}}
+		}	
+function styleteren(feature) {
+    if (feature.properties.Name) {
+        return {
+            weight: 3,
+            opacity: 0.65,
+            color: 'red',
+			dashArray: '10',
+            fillPattern: przerywanelinie,
+            fillOpacity: 0.65
+        };
+    }
+}
+
+			function stylebudynki(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:1.5,
+				opacity: 1,
+				color: '#696969 ',
+				fillColor: '#2f2f2f',
+				fillOpacity:1
+				}}
+		}	
+			function stylesciezki(feature){
+		if(feature.properties.Name
+		){
+			return{
+				weight:1.5,
+				opacity: 0.85,
+				color: '#2e2e2e ',
+				fillColor: '#696969 ',
+				fillOpacity:0.85
+				}}
+		}	
+
+// Implementacja warstw na mapie
+var warstwateren = L.geoJson(teren, {
+  style: styleteren,
+ 
+});
+	var warstwaOzdobne = L.geoJson(ozdobne, {
+  style: styleozdobne,
+  onEachFeature: function (feature, warstwa) {
+    if (feature.properties && feature.properties.Name) {
+      warstwa.bindPopup(feature.properties.Name);
+    } else {
+      warstwa.bindPopup("Brak nazwy");
+    }
+  }
+});
+
+var warstwaOwocowe = L.geoJson(owocowe, {
+  style: styleowocowe,
+  onEachFeature: function (feature, warstwa) {
+    if (feature.properties && feature.properties.Name) {
+      warstwa.bindPopup(feature.properties.Name);
+    } else {
+      warstwa.bindPopup("Brak nazwy");
+    }
+  }
+});
+
+var warstwaOzdobneLinie = L.geoJson(ozdobnelinie, {
+  style: styleozdobnelinie,
+  onEachFeature: function (feature, warstwa) {
+    if (feature.properties && feature.properties.Name) {
+     warstwa.bindPopup(feature.properties.Name);
+    } else {
+      warstwa.bindPopup("Brak nazwy");
+    }
+  }
+});
+var warstwaDrogi = L.geoJson(drogi, {
+  style: styledrogi,
+ 
+});
+
+var warstwabudynki = L.geoJson(budynki, {
+  style: stylebudynki,
+  });
+var warstwasciezki = L.geoJson(sciezki, {
+  style: stylesciezki,
+  });
+  
+ var szukaj = L.layerGroup([
+		warstwaOzdobneLinie, warstwaOwocowe, warstwaOzdobne, warstwaDrogi, warstwabudynki, warstwasciezki, warstwateren
+	])
+	.addTo(map);
+	
+// Utworzenie wyszukiwarki roślin
+	L.control.search({
+		layer: szukaj,
+		initial: false,
+        zoom:16,
+		propertyName: 'Name'
+		})
+	.addTo(map);
+
+
+  </script>
+
+  </body>
+  
+</html>	
